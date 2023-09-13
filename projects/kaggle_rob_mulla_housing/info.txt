@@ -1,0 +1,5 @@
+This project is from:
+https://www.kaggle.com/code/kenjee/housing-prices-example-with-video-walkthrough
+
+video is at:
+https://www.youtube.com/watch?v=NQQ3DRdXAXE
