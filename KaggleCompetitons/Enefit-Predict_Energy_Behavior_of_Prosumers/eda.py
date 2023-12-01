@@ -2,13 +2,16 @@ import pandas as pd
 import numpy as np
 import json
 from pathlib import Path
+import seaborn as sns
 import matplotlib.pyplot as plt
+import torch
 
 from geopy.geocoders import Nominatim
 
 import xgboost as xgb
+import catboost as cat
 
-def prepare_geoopt(data_dir):
+def prepare_geoopt(data_dir:str,forecast_weather:pd.DataFrame)->pd.DataFrame:
     """
     Using the name of the county (from county_id_to_name_map.json)
     file, and 'geopy' library, compute the location (latitute, longitute)
@@ -40,7 +43,7 @@ def prepare_geoopt(data_dir):
         "järva": "järv"
     }
 
-    forecast_weather = pd.read_csv("./data/"+"forecast_weather.csv")
+    # forecast_weather = pd.read_csv("./data/"+"forecast_weather.csv")
 
     tmp_cords = forecast_weather[["latitude", "longitude"]].drop_duplicates()
 
@@ -84,6 +87,8 @@ def prepare_geoopt(data_dir):
 
     new_df.to_csv(data_dir+"county_lon_lats.csv",index=False)
 
+    return new_df
+
 class FeatureProcessorClass():
     def __init__(self):
         # Columns to join on for the different datasets
@@ -101,7 +106,15 @@ class FeatureProcessorClass():
         # Categorical columns (specify for XGBoost)
         self.category_columns = ['county', 'is_business', 'product_type', 'is_consumption', 'data_block_id']
 
-    def __call__(self, data, client, historical_weather, forecast_weather, electricity, gas, location):
+    def __call__(self,
+                 data,
+                 client,
+                 historical_weather,
+                 forecast_weather,
+                 electricity,
+                 gas,
+                 location
+                 ):
         '''Processing of features from all datasets, merge together and return features for dataframe df '''
         # Create features for relevant dataset
         data = self.create_data_features(data)
@@ -286,7 +299,11 @@ def preprocess_datasets(data_dir):
     forecast_weather = pd.read_csv(data_dir + "forecast_weather.csv")
     electricity = pd.read_csv(data_dir + "electricity_prices.csv")
     gas = pd.read_csv(data_dir + "gas_prices.csv")
-    location = pd.read_csv(data_dir + "county_lon_lats.csv")
+
+    if (IS_LOCAL):
+        location = pd.read_csv(data_dir + "county_lon_lats.csv")
+    else:
+        location = prepare_geoopt(data_dir,forecast_weather)
     print("Data Loaded Successfully")
 
     # Create all features
@@ -303,6 +320,7 @@ def preprocess_datasets(data_dir):
                             gas=gas.copy(),
                             location=location.copy()
                             )
+
     print("Data is collated successfully")
 
     # add time-lagged data to dataset
@@ -368,45 +386,27 @@ def reduce_memory_dataset(data_dir)->pd.DataFrame:
 
 # --------------------------------------------------------
 
-def model_xgboost(df:pd.DataFrame):
+def model_xgboost(df: pd.DataFrame, features:list[str]):
     #### Create single fold split ######
-    # Remove empty target row
-    target = 'target'
-    df = df[df[target].notnull()].reset_index(drop=True)
 
-    print(f"Numeric  features: #{df.select_dtypes(exclude='object').shape[1]} {df.select_dtypes(exclude='object')}")
-    print(f"Object features: #{df.select_dtypes(exclude='number').shape[1]} {df.select_dtypes(exclude='number')}")
-
-    df = df.select_dtypes(exclude=['object'])
-
+    # df = df.select_dtypes(exclude=['object'])
 
     train_block_id = list(range(0, 600)) # out of 637
 
     tr = df[df['data_block_id'].isin(train_block_id)]  # first 600 data_block_ids used for training
     val = df[~df['data_block_id'].isin(train_block_id)]  # rest data_block_ids used for validation
 
-    # Remove columns for features
-    no_features = ['date',
-                   'latitude',
-                   'longitude',
-                   'data_block_id',
-                   'row_id',
-                   'hours_ahead',
-                   'hour_h',
-                   ]
-
-    remove_columns = [col for col in df.columns for no_feature in no_features if no_feature in col]
-    remove_columns.append(target)
-    features = [col for col in df.columns if col not in remove_columns]
-    print(f'There are {len(features)} features: {features}')
-
     # GPU or CPU use for model
-    device = 'cpu'
-    DEBUG = True  # False/True
+    # GPU or CPU use for model
+    if torch.cuda.is_available():
+        device = 'cuda'
+    else:
+        device = 'cpu'
+    DEBUG = False  # False/True
 
     clf = xgb.XGBRegressor(
         device=device,
-        # enable_categorical=True,
+        enable_categorical=True,
         objective='reg:absoluteerror',
         n_estimators=100 if DEBUG else 1500,
         early_stopping_rounds=100
@@ -434,12 +434,206 @@ def model_xgboost(df:pd.DataFrame):
     plt.title("XGBoost MAE Loss")
     plt.show()
 
+    # plot
+    TOP = 20
+    importance_data = pd.DataFrame(
+        {'name': clf.feature_names_in_,
+         'importance': clf.feature_importances_}
+    )
+    importance_data = importance_data.sort_values(by='importance', ascending=False)
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    sns.barplot(data=importance_data[:TOP],
+                x='importance',
+                y='name'
+                )
+    patches = ax.patches
+    count = 0
+    for patch in patches:
+        height = patch.get_height()
+        width = patch.get_width()
+        perc = 100 * importance_data['importance'].iloc[count]  # 100*width/len(importance_data)
+        ax.text(width, patch.get_y() + height / 2, f'{perc:.1f}%')
+        count += 1
+
+    plt.title(f'The top {TOP} features sorted by importance')
+    plt.show()
+
+
+
+def create_revealed_targets_test(data, previous_revealed_targets, N_day_lags):
+    '''Create new test data based on previous_revealed_targets and N_day_lags '''
+    for count, revealed_targets in enumerate(previous_revealed_targets):
+        day_lag = count + 2
+
+        # Get hour
+        revealed_targets['hour'] = pd.to_datetime(revealed_targets['datetime']).dt.hour
+
+        # Select columns and rename target
+        revealed_targets = revealed_targets[['hour', 'prediction_unit_id', 'is_consumption', 'target']]
+        revealed_targets = revealed_targets.rename(columns={"target": f"target_{day_lag}_days_ago"})
+
+        # Add past revealed targets
+        data = pd.merge(data,
+                        revealed_targets,
+                        how='left',
+                        on=['hour', 'prediction_unit_id', 'is_consumption'],
+                        )
+
+    # If revealed_target_columns not available, replace by nan
+    all_revealed_columns = [f"target_{day_lag}_days_ago" for day_lag in range(2, N_day_lags + 1)]
+    missing_columns = list(set(all_revealed_columns) - set(data.columns))
+    data[missing_columns] = np.nan
+
+    return data
 
 if __name__ == '__main__':
-    # prepare dataframe
-    # prepare_geoopt(data_dir="./data/")
-    # preprocess_datasets(data_dir="./data/")
+
+    # Settings
+    DEBUG = False #
+    IS_LOCAL = True #
+    data_dir = "./data/"
+
+    ''' ------------| PROCESS TRAIN DATA |------------ '''
+
+    # load all datasets
+    train = pd.read_csv(data_dir + "train.csv")
+    client = pd.read_csv(data_dir + "client.csv")
+    historical_weather = pd.read_csv(data_dir + "historical_weather.csv")
+    forecast_weather = pd.read_csv(data_dir + "forecast_weather.csv")
+    electricity = pd.read_csv(data_dir + "electricity_prices.csv")
+    gas = pd.read_csv(data_dir + "gas_prices.csv")
+    if (IS_LOCAL): location = pd.read_csv(data_dir + "county_lon_lats.csv")
+    else: location = prepare_geoopt(data_dir, forecast_weather)
+
+    print("\t> Data Loaded Successfully")
+
+    # initialize data processing pipeline
+    FeatureProcessor = FeatureProcessorClass()
+
+    # collate all datasets together
+    data = FeatureProcessor(data=train.copy(),
+                            client=client.copy(),
+                            historical_weather=historical_weather.copy(),
+                            forecast_weather=forecast_weather.copy(),
+                            electricity=electricity.copy(),
+                            gas=gas.copy(),
+                            location=location.copy()
+                            )
+
+    print("\t> Data is collated successfully")
+
+    # Create all features
+    N_day_lags = 15  # Specify how many days we want to go back (at least 2)
+
+    # add time-lagged data to dataset
+    df = create_revealed_targets_train(data.copy(),
+                                       N_day_lags=N_day_lags)
+    print("\t> Lagged data is added successfully")
+
+    # save dataset
+    if IS_LOCAL:
+        df.to_csv(data_dir + "collated_train.csv", index=False)
+        print("\t> Resulting dataframe is saved successfully")
 
     # reduce memory and model
     df = reduce_memory_dataset(data_dir="./data/")
-    model_xgboost(df)
+
+    ''' --------------| CLEANING AND IMPUTATION |-------------- '''
+
+    print(f"\t> Numeric features: #{df.select_dtypes(exclude='object').shape[1]} "
+          f"{df.select_dtypes(exclude='object').keys()}")
+    print(f"\t> Object features: #{df.select_dtypes(exclude='number').shape[1]} "
+          f"{df.select_dtypes(exclude='number').keys()}")
+
+    # Remove empty target row
+    target = 'target'
+    df = df[df[target].notnull()].reset_index(drop=True)
+
+    # Remove columns for features
+    no_features = ['date',
+                   'latitude',
+                   'longitude',
+                   'data_block_id',
+                   'row_id',
+                   'hours_ahead',
+                   'hour_h',
+                   ]
+    remove_columns = [col for col in df.columns for no_feature in no_features if no_feature in col]
+    remove_columns.append(target)
+    features = [col for col in df.columns if col not in remove_columns]
+    print(f'There are {len(features)} features: {features}')
+
+    ''' --------------| MODELLING |--------------- '''
+
+    model_xgboost(df,features)
+
+    ''' --------------| SUBMISSION |-------------- '''
+
+
+    # submission
+    import enefit
+
+    env = enefit.make_env()
+    iter_test = env.iter_test()
+
+    # Reload enefit environment (only in debug mode, otherwise the submission will fail)
+    if DEBUG:
+        enefit.make_env.__called__ = False
+        type(env)._state = type(type(env)._state).__dict__['INIT']
+        iter_test = env.iter_test()
+
+    # List of target_revealed dataframes
+    previous_revealed_targets = []
+
+    for (test,
+         revealed_targets,
+         client_test,
+         historical_weather_test,
+         forecast_weather_test,
+         electricity_test,
+         gas_test,
+         sample_prediction) in iter_test:
+
+        # Rename test set to make consistent with train
+        test = test.rename(columns={'prediction_datetime': 'datetime'})
+
+        # Initiate column data_block_id with default value to join on
+        id_column = 'data_block_id'
+
+        test[id_column] = 0
+        gas_test[id_column] = 0
+        electricity_test[id_column] = 0
+        historical_weather_test[id_column] = 0
+        forecast_weather_test[id_column] = 0
+        client_test[id_column] = 0
+        revealed_targets[id_column] = 0
+
+        location_test = prepare_geoopt(data_dir, forecast_weather_test)
+
+        data_test = FeatureProcessor(
+            data=test,
+            client=client_test,
+            historical_weather=historical_weather_test,
+            forecast_weather=forecast_weather_test,
+            electricity=electricity_test,
+            gas=gas_test,
+            location=location_test
+        )
+
+        # Store revealed_targets
+        previous_revealed_targets.insert(0, revealed_targets)
+
+        if len(previous_revealed_targets) == N_day_lags:
+            previous_revealed_targets.pop()
+
+        # Add previous revealed targets
+        df_test = create_revealed_targets_test(data=data_test.copy(),
+                                               previous_revealed_targets=previous_revealed_targets.copy(),
+                                               N_day_lags=N_day_lags
+                                               )
+
+        # Make prediction
+        X_test = df_test[features]
+        sample_prediction['target'] = clf.predict(X_test)
+        env.predict(sample_prediction)
