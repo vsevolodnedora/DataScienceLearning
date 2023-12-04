@@ -82,10 +82,11 @@ def prepare_geoopt(data_dir:str,forecast_weather:pd.DataFrame)->pd.DataFrame:
         df_data["longitude"] += [x[1] for x in v]
 
     new_df = pd.DataFrame(df_data)
+    new_df["county"] = df["county"].astype(object) # co compatibility with other data
 
     print(f"Saving dataframe with {new_df.shape} shape")
 
-    new_df.to_csv(data_dir+"county_lon_lats.csv",index=False)
+    new_df.to_csv(data_dir+"county_lon_lats.csv") # ,index=False
 
     return new_df
 
@@ -303,7 +304,7 @@ def preprocess_datasets(data_dir):
     if (IS_LOCAL):
         location = pd.read_csv(data_dir + "county_lon_lats.csv")
     else:
-        location = prepare_geoopt(data_dir,forecast_weather)
+        location = prepare_geoopt(data_dir, forecast_weather)
     print("Data Loaded Successfully")
 
     # Create all features
@@ -332,7 +333,7 @@ def preprocess_datasets(data_dir):
     df.to_csv(data_dir + "collated_train.csv", index=False)
     print("Resulting dataframe is saved successfully")
 
-def reduce_memory_dataset(data_dir)->pd.DataFrame:
+def load_reduce_memory_dataset(data_dir)->pd.DataFrame:
 
     data = pd.read_csv(data_dir + "collated_train.csv")
 
@@ -459,8 +460,6 @@ def model_xgboost(df: pd.DataFrame, features:list[str]):
     plt.title(f'The top {TOP} features sorted by importance')
     plt.show()
 
-
-
 def create_revealed_targets_test(data, previous_revealed_targets, N_day_lags):
     '''Create new test data based on previous_revealed_targets and N_day_lags '''
     for count, revealed_targets in enumerate(previous_revealed_targets):
@@ -487,7 +486,15 @@ def create_revealed_targets_test(data, previous_revealed_targets, N_day_lags):
 
     return data
 
+def plotting(df:pd.DataFrame):
+    pass
+
+
 if __name__ == '__main__':
+
+    df = load_reduce_memory_dataset(data_dir="./data/")
+    plotting(df)
+
 
     # Settings
     DEBUG = False #
@@ -503,8 +510,10 @@ if __name__ == '__main__':
     forecast_weather = pd.read_csv(data_dir + "forecast_weather.csv")
     electricity = pd.read_csv(data_dir + "electricity_prices.csv")
     gas = pd.read_csv(data_dir + "gas_prices.csv")
-    if (IS_LOCAL): location = pd.read_csv(data_dir + "county_lon_lats.csv")
-    else: location = prepare_geoopt(data_dir, forecast_weather)
+    if (IS_LOCAL):
+        location = pd.read_csv(data_dir + "county_lon_lats.csv")
+    else:
+        location = prepare_geoopt(data_dir, forecast_weather)
 
     print("\t> Data Loaded Successfully")
 
@@ -529,6 +538,7 @@ if __name__ == '__main__':
     # add time-lagged data to dataset
     df = create_revealed_targets_train(data.copy(),
                                        N_day_lags=N_day_lags)
+
     print("\t> Lagged data is added successfully")
 
     # save dataset
@@ -536,8 +546,9 @@ if __name__ == '__main__':
         df.to_csv(data_dir + "collated_train.csv", index=False)
         print("\t> Resulting dataframe is saved successfully")
 
+
     # reduce memory and model
-    df = reduce_memory_dataset(data_dir="./data/")
+    df = load_reduce_memory_dataset(data_dir="./data/")
 
     ''' --------------| CLEANING AND IMPUTATION |-------------- '''
 
@@ -566,7 +577,7 @@ if __name__ == '__main__':
 
     ''' --------------| MODELLING |--------------- '''
 
-    model_xgboost(df,features)
+    model_xgboost(df, features)
 
     ''' --------------| SUBMISSION |-------------- '''
 
