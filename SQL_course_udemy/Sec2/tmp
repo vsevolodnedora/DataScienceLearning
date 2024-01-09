@@ -1,0 +1,15 @@
+/* SELECT DISTINCT(rating) FROM film; */
+/* SELECT COUNT(*) FROM payment; */
+/* SELECT COUNT(DISTINCT(amount)) FROM payment; */
+/* SELECT * FROM customer 
+	WHERE first_name = 'Jared';*/
+/* SELECT * FROM film
+	WHERE rental_rate > 4 AND replacement_cost >= 19.99;*/
+/*SELECT COUNT(title) FROM film
+	WHERE rental_rate > 4 AND replacement_cost > 19.99;*/
+
+/* Exercise WHERE */
+/* SELECT email FROM customer WHERE
+	first_name = 'Nancy' AND last_name = 'Thomas';*/
+/*SELECT description FROM film WHERE title = 'Outlaw Hanky';*/
+/* SELECT phone FROM address WHERE address = '259 Ipoh Drive';*/
