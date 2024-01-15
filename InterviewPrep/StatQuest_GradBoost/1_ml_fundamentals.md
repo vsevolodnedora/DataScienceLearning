@@ -99,6 +99,36 @@ Each time we compute the log of the odds and a probability in the end.
 
 __OVERALL__: In a gradient boost, a set of trees is build, where each tree gives a prediction based on the input features. The prediction is optimized through gradient descent in training. The results from all trees is combined, scaled by learning rate. 
 
+__Algorithm__:
+
+__Input__ Data ${(x_i, y_i)}_{i=1}^n$ and a dfferentiable __Loss Function__ $L(y_i, F(x))$ 
+    - Loss function is generally is defined in terms of probabilities for each observed value. Specifically, we define the __log(likelihood)__ as 
+    Log( likelihood of observed data | prediction ) = - $\sum_{i=1}^N Y_i * \log(p) * (1 - Y_i) * log(1-p)$, where $p$ is the predicted probabilities, and $Y_i$ are the observed values. 
+    - __NOTE__ the log(likelihood) is a summed quantity for _all_ observed values, whith probability $p$ being the same for all. 
+    - __NOTE__: the better the prediction, _the larger the log(likelihood)_ and and this is why in `logistic regression` the goal is to __maximize the log(likelihood)__. 
+    - Hence, to use log(likelohood) as a loss function, it is multiplied by -1. 
+    - The loss function should be transformed to use __log(odds)__ instead of probabilities. 
+    - We can transform probabilities to log of the odds recalling that $\log(p/(1-p))=$ log( odds ) and doint rearangment of terms, and that $\log(1 - p) = \log(1 - \exp(\log(odss)) / (1 + \exp(\log(odds)))) = - \log(1 + \exp(\log(odds)))$
+    The resulted log(odds) function: - Observed x log(odds) + log(1 + exp(log(odds))) is deferentiable with respect to the log(odds); this can be proven with _cahin rule_. 
+
+__Step 1__ Initialize model with constant value $F_0(x) = \argmin \sum L(y_i, \gamma)$, where $L()$ is the loss function, $\gamma$ is the log(odds), $y_i$ are the observed values. Again, the $\argmin$ is that we need to find the value of $\gamma$ that _minimizes_ the sum. 
+    - First, take the derivative of each term w/r to log(odds)
+
+__Step 2__: Build dtrees, for m = 1 to M
+    - a) Compute _pseudi-residuals_ i.e., _derivative of the loss fucntion with respect to the predicted log odds_ (or _observed probability - predicted probability_) $r_{i;m} = - [\partial L (y_i, F(x_i)) / \partial F(x_i)]_{F(x) = F_{m-1}(x)}$ for $i = 1, ... , n$
+    - b) For a regression tree to the $r_{i,m}$ values and create terminal regions $R_{j,m}$ for $j = 1...J_m$, i.e., for each _leaf_ create a 'terminal region' with a single value
+    - c) Calculate the output value for each tree; for $j=1...J_m$ compute $\gamma_{j,m} = \argmin \sum_{x_i\in R_{i,j}} L(y_i, F_{m-1}(x_i) + \gamma)$. 
+        - In other words; for each leaf in a new tree we compute the predicted value.
+        - __NOTE__: the dataset is imilted for each calculation to what ends up in a given leaf. 
+        - In this case we may awoid taking the derivative of the function and take the _socond order Taylor expansion term_ to simplify the caluclaiton (we neglect further terms); In the end we would need to take first and second derivatve of the _Loss Function_, where the first derivative was alread ycomputed. 
+    - d) Make a new prediction for each sample $F_m(x) = F_{m-1}(x) + \nu \sum_{j=1}^{J_m} \gamma_{j,m} I(x\in R_{j,m})$
+    
+
+
+
+
+
+
 ---
 
 ## Regularization
