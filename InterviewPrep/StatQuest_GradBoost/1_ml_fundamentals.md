@@ -13,6 +13,55 @@
 - Boosting
 - Bagging
 
+---
+
+### 0. [AdaBoost](https://www.youtube.com/watch?v=LsK-xG1cLYA&t=1054s)
+
+In Random forst each time a tree is a complete tree. In _Ada Boost_ a forst of _stumps_ is made, e.g., a root with two leafs. 
+
+`!` Stumps are _weak learners_. 
+
+__In Random Forst__:
+- We build full-sized trees
+- Trees have _equal_ wieght in the final say. 
+- Treens are independent of each other
+
+__In AdaBoost__ for calssification: 
+- We use _stumps_, aka, __weak lerners__ to build forest
+- Each stump may have _different_ weight in a final say
+- Order is important, as stumps are made accounting for the error on the previos one
+
+##### Building the AdaBoost
+
+- We start by adding a new column, _Sample weight_ that accounts for _how important for this feature to be correctly calssified_.  
+At the beginning all samples have the same weight 1/NofSamples.    
+- Use each fueature to build a stump and comute its _Gini Coefficient_. A stump with the __lowest Gini coefficient__ is the first one in the forest. The _weight_ of a stump is based on the errors made, as _summ of errors_ of indurectly classified samples NofIncorret/Nsamples. Then the weght
+$$
+weight = 1/2 * \log( (1 - \text{total error}) / \text{total error} )  
+$$
+- Next iteration, we change the _Sample weight_ as to include the importance of correclty classifying the data row, or a sample, that was inducreclty classified with the previos 'best stump'. The new 'Sample weight' is 
+$$
+New Sample Weight = Old Sample Weight * exp(weight)
+$$
+- Previously correctly classified samples get a _decrease_ in _Sample weight_ as 
+$$
+New Sample Weight = Old Sample Weight * exp(-weight)
+$$
+- Renormalize all weights so that they add to 1
+- Next stump in the forst uses the _updated Sample weights_. 
+
+In theory the __Weighted Gini Index__ can be used to emphaise the correctly classified samples.  
+Otherwise, we can _create new data samples_, copies of the incorrectly classified sample with a previos stump.  
+__Note__ we effectively create a _new dataset_ the same size as the original. We created it by drawing samples from the previos one randomly, but the distribution used is the same as the _Sample Weight_ values we obtained.  
+By doing this we _effectly_ increased the number when we draw the _incorreclty clasasified sample_. 
+
+- Next, we asign equal sample weights to all the samples as at the beginning of building the first stump. 
+
+__Overall__: each new stump is created usin _new_ dataset, created such, that samples _incorrectly_ classified with the previos one are _oversampled_. This allows the new _weak lerner_ or stump to _correct_ for the errors of the previos one. 
+
+The final classification is done by collecting the preditions from all stumps for all possible outcomes, and the outcome with the largest total sum wins. Aka _majority voiting_. 
+
+---
 
 ### 1. [Gradient Boost Part 1/4: Regression main ideas](https://www.youtube.com/watch?v=3CC4N4z3GJc)
 
