@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  api:
+    image: mlops/language-detection:v1 # replace 'your-image-name' with the name you used when building your Docker image
+    build:
+      context: .
+    ports:
+      - "8000:8000" # Maps port 8000 on the host to port 8000 in the container
+    # volumes:
+    #  - .:/api # Optional: Mounts the current directory on the host to /app in the container. Useful during development for live code changes.
+
+
