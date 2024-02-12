@@ -101,3 +101,58 @@ There you use a special time as follw to get the _date_ only
 ```sql
 SELECT DATE(payment_date) FROM payment;
 ```
+
+### HAVING
+
+- Allows to filter __after__ an aggregation has taken place, e.g., after GROUP BY call 
+
+__NOTE__: when using aggregate finctions
+- Use WHERE on columns that _are not_ aggregated 
+- Use HAViNG on columns that _are_ aregettated
+
+__Example__:
+```sql
+SELECT company,SUM)sales)
+FROM finance_table
+WHERE company != 'google'
+GROUP BY company
+hAVING SUM(sales) > 1000
+```
+
+Having must _use aggegate_ results as a filter along with GROUP BY
+
+- So this is a filter on the aggregated column. Similar to WHERE 
+
+### Assessment Test 1
+
+/*
+SELECT customer_id, COUNT(payment_id) FROM payment
+GROUP BY customer_id
+HAVING COUNT(payment_id) >= 40
+*/
+/*
+SELECT staff_id,customer_id,SUM(amount) 
+FROM payment
+WHERE staff_id = 2
+GROUP BY staff_id,customer_id
+HAVING SUM(amount) > 100
+*/
+/*
+SELECT customer_id,SUM(amount)
+FROM payment
+WHERE staff_id = 2
+GROUP BY customer_id
+HAVinG SUM(amount) >= 110
+*/
+/*
+SELECT COUNT(title) FROM film
+WHERE title ILIKE 'j%'
+*/
+/*
+SELECT first_name,last_name 
+FROM customer
+WHERE first_name ILIKE 'E%'
+AND address_id < 500
+ORDER BY address_id DESC
+LIMIT 1
+*/
