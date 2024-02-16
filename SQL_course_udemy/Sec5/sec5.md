@@ -96,5 +96,81 @@ __NOTE__: the result should be an empty list, but I do get results...
 So such joins can be used to filter out data that should not be in the final result if it is not on one of the columns or not in both columns
 
 
-### LEFT OUTER JOIN
+### LEFT OUTER JOIN (or LEFT JOIN)
 
+- LEFT jOIN results in a ser of records that are in the _left table_
+
+Here __Order Matters__.  
+It is importan which table is on the left.  
+
+
+Important: This is _not symmetrica_. 
+Imagine a wien diagram but only with a circle for the table A covered (and where it overlaps with table B)
+
+__Example__:
+```sql
+SELECT * FROM tableA
+LEFT OUTER JOIN tableB
+ON tableA.col_match = tableB.col_match
+```
+
+The information should be in table B to be added.  
+
+`?` What if we want to get rows _only_ found in tableA and _not_ in tableB.  
+In wien diagram it is area of the A table circle excluding th intersection with table B circle.  
+```sql
+SELECT * FROM tableA
+LEFT OUTER JOIN tableB
+ON tableA.col_match = tableB.col_match
+WHERE tableB.another_col IS NULL
+```
+
+This will return the result that is only the _left table_ and _not_ in the right table.  
+
+
+### RIGHT JOIN  
+
+it is the same as LEFT OUTER JOIN just tables switch
+
+In the wien diagram it is the ara of the tableB circle icluding itersection with tableA circle. 
+
+```sql
+SELECT * FROM tableA
+RIGHT OUTER JOIN tableb
+ON tableA.col_match = tableB.col_match
+```
+
+And to just select the second table data that is not found in the table A, use 
+WHERE tableA.another_col IS NULL
+
+---
+
+# UNIONS
+
+`!` combine the result-set of two or more SELECT statements (concatenate the results of SELECT)
+
+```sql
+SELECT column_names FROM table1
+UNION
+SELECT column_names FROM table2
+```
+
+First challenge
+```sql
+SELECT email FROM customer
+LEFT OUTER JOIN address
+ON customer.address_id = address.address_id
+WHERE district = 'California'
+```
+
+Chaining multiple Joins:
+
+```sql
+SELECT title,actor.first_name,actor.last_name from film
+LEFT JOIN film_actor
+ON film.film_id = film_actor.film_id
+LEFT JOIN actor
+ON film_actor.actor_id = actor.actor_id
+WHERE actor.first_name = 'Nick' AND 
+	actor.last_name = 'Wahlberg'
+```
