@@ -1,0 +1,72 @@
+# Histody and papers of fame
+### Long history of LLMs and road to Multimodlaity
+
+- Traditional approaches
+- Transfer learning (unsiervised + supervised (finetune))
+- Old open source models
+- Language models are few shot learners (paper)
+- transition from conventional finetuning to few-shot trial
+- Current models: size, few-shot, 93% English
+- Multitask propted training enables zero-shot task generalization (paper)
+    - Sme task are used for training and others for inference
+    - During training the model is "trained" how to respond to a prompt
+    - This was done with a pre-trained model
+    - outperformed ChatGPT3
+- Further scaling, adding mode data. Some tasks were left for testing. 
+    - Chain of thought. The model has to explain why he gave a certain answer. 
+    - Few shot was also used during trainig 
+    - Scaling instructions - finetuned language models
+    - the model needs to train to respond properly to an instructions
+- Using reinforcment learning 
+    - WebGPT - used to search an answer related links
+    - Training WebGPT
+        - Behavioural cloning (using supervised learning)
+        - Reward modeling (rank the answer by annotators - train a reward model)
+        - Reinforcment learning - PPO - fine tune the first model based on the second model (using KL penalty)
+        - Rejection sampling - not PPO, but sample a fixed amount of answers and score them, and select the best scoring answer 
+        - Overall, the model was trained by fidding its own best answers
+- Training language models to follow insturctions iwth human feedback
+    - collect data for supervised fine-tining
+    - train reward model based on the preference data
+    - using PPO (RL) to update the model based on the reward
+    - Adding a new layer of training with custom instructions. 
+    - Prefernece annotation was also used
+- ChatGPT 
+    - Incorporating InstructGPT with interface
+    - Bsed on GPT-3.5
+    - Trained similarly as InstructGPT
+    - Distilled for tupbo version
+- Multimodality
+    - Language is not all you need [paper]
+        - Cosmos1 model, the model that answered questions about pictures
+        - Image -> text model: optical character recognition (recognized text in images)
+        - Method: using different decoder to process images (vision transformers), image embeddings inthe text (similar to Dalli 1)
+        - ImageNet is outdated... 
+        - Zero shot classification with description was found to work better (much better than human)
+        - Images were compressed, and image tockens were used
+        - Used language-only instruction tunning 
+    - Visual ChatGPT
+        - adding visual foundation models (call the models when user passess and image)
+    - PaLM-E
+        - there it was shown that adding data from robotics to LLM with images, the robot was shown to perform better. 
+    - GPT-4 Technical Report
+        - Evaluated on human exams
+    - Gemini
+        - model by anthropic.ai
+        - Responses in real time 
+        - In many cass it outperformed GPT4 but there are different techniques used (many-shots, and long chain-of-thought). 
+        - Image and audio procession was added (compared with Whisper-v3) Achiend significatnly better performance
+        - Gemini uses: image tockens, universal language model for audio (embeddings reused), video -> transformer -> image decoder, and text decoder were separated (similar to GPT4, where the Dalli 3 is called under the hood). 
+    - Alpaca [paper]
+        - using open-source LLM by Meta, model generates propts and answers its pwn prompts. 
+    - Open Assistant
+        - Using colunteers to annotate messeges and do all the fine-tuning to get a model close to ChatGPT
+    - Mistral
+        - Mixtral (mixtrue of experts model) could compare with ChatGPT
+### Colculsion
+- Importance of scaling for AI developemnt
+- Instuction tuning is essetial for large models
+- Reward models enhanced LLM quality (see LLama paper)
+- RLHF (limits computational demand)
+- LLMs are general-purpose interfaces across various tasks (especially zero-shot learning)
+- Multimodal perception is the future
