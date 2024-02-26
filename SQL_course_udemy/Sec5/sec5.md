@@ -174,3 +174,16 @@ ON film_actor.actor_id = actor.actor_id
 WHERE actor.first_name = 'Nick' AND 
 	actor.last_name = 'Wahlberg'
 ```
+
+Get titles of films returned between dates. Notice the join in the subquery
+```sql
+sELECT film_id,title FROM film
+WHERE film_id IN (
+	SELECT inventory.film_id FROM rental
+	INNER JOIN inventory ON
+	inventory.inventory_id = rental.inventory_id
+	WHERE rental_date BETWEEN '2005-05-29' AND '2005-05-30'
+)
+```
+
+### EXISTS operator
