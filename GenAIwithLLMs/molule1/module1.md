@@ -191,3 +191,36 @@ Solutions:
 
 
 ### Generative AI project lifecycle
+
+From cocpetion to launch of a project: infrustructre and difficulties. 
+
+1. __Scope__. Define a sope as accurately and precisely as possible. LLMs abilities depend on the size and training. What tasks are needed -- defines what LLM (size, price) is needed. This has to be specific. 
+2. __Select__. Choose an exisiting model or train from scratch. Usually we start with an existing model. 
+3. __Adapt and align mode__. Once model is selected it might require ffurther:
+    - prompt engineering
+    - fine-tuning
+    - aligning with human feedback
+    to achieve required performance. Evaluation needs to be done to assess the model performance. This is an _iterative process_
+4. Application integration
+    - _Optimize_ and deploy model for inference (computational efficiency)
+    - _Augment model_ and build LLM-powered application (mind the LLMs flaws, e.g., halucination, reasoning, math)
+
+
+### Intro do Labs
+
+Labs are done using system called _Vocareum_. Access to AWS [Sagemaker](https://aws.amazon.com/sagemaker/) for running notebooks. 
+- _Start lab_. 2 hours time limit. 
+- First, log out of AWS concol
+- Get to SageMaker studio. This is Jupyter-based IDE - Click _Open Launcher_ -> _system terminal_
+- Copy Labs from S3 bucket (object store that is in the cloud)
+
+
+### LAB: Generative AI Use Case: Summarize Dialogue
+
+Resources provided 8 CPUl 32gb RAM  
+Libraries
+- Tranformers (from hugging face)
+- Pytorch 
+- datasets (from hugging face)
+
+Note: When a new model is evaluated as a possible candidate: zero-shot, one-shot, few-shot prompt engeneering methods are the _basis_ to understand whether a model is a good fit. 
