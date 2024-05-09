@@ -65,3 +65,26 @@ Chhosing rank of LoRA matrxies is still an ative area of research. The smaller t
 
 ### Soft Prompting
 
+_Additive method_ that does not alter weights at all.  
+It is __different__ from _prompt engineering_. Here semantics of the prompt is not to be altered, that requires a lot of manual work and context length. With _prompt tuning_ additional _trainable tockens_ are added to the input of the LLM. _Supervised learning_ then used to determine their optimal values. This is `soft prompt`, this set of trainable tockens. It is _pre-appended_ to embedding vectors that represent the input text. (same length as the embedding vectors, and inclue 20-100 tockens).  
+Embeddings of each tocken exist at a unique point in multi-D space. Soft prompt consist of tockens that _can take any value within embedding space_. They do not by construction correspond to fixed words. They are learned by supervised learning _for a given task_.  
+
+When trained, weights of the LLM are frozen, and the underlying model is not updated. Only embedding vectors with extra learnabla tockens are updated to obtimze the prompt completition for specific tasks. This is parameter-efficient.
+
+Different set of soft-prompts can be trained fore different tasks. At the inference, thesoftpromt is pre-pend to the promt for a given task. 
+
+It was shown to perform better for larger LLMs, while for smaller LLMS btter superGLUE scores were achieved with full fine-tuing or multi-task fine-tuning. 
+
+Issue:
+- Interpetability of learned virtual tockens; This tockes _do not corrspond_ to any word; phrase or number. Nearest neighbours analysis shows that they form `semantic clusters`, they are connected t othe task. 
+
+
+### Recap
+
+- foundatation modls
+- Prmpt tablpates and datasets
+- Evaluation methics for LLM performance
+- Instruction fine-tuning technqiue
+- PEFT 
+- LoRA and prompt-tuning
+- QLoRA
