@@ -192,6 +192,3 @@ It is popular becase it has a balance between complecity and performance
 #### Other methods
 - Q-learning 
 - Direct preference optimization
-
-
-### RLHF: Reward hacking
