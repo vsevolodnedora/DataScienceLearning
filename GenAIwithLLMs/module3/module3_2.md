@@ -1,54 +1,100 @@
-# Reinforcment learning with human feedback (RLHf)
+# LLM-powered applications
 
-### RLHF: Reward hacking
+This is the last stage of the Generatative AI project life-cycle.  
+_Application integration_.  
+- Optimize and deploy model for inference (adress: spead, compute, trade-offs)
+- Augment model and build LLM-powered applications (address: external data, connecting to external resources) (address: API, model consumption)
 
-Recap:
-RLHF - fine-tuning process to allign LLM with human values.  
-Use _reward model_ to assess model completions agains human preference metric. 
-Use _RL_ aka PPO to update weights of LLM.  
-Use multi-iteration cycle. Untill the desired degree of alignment is achieved. 
+Consider _model optimization_.  
+LLMs requrie large compute and storage; speed for inference must be low. 
+- On premises (eg., edge devices)
+- On a cloud
 
-In RL there exists `reward hacking` where an agent learns to _chear_ to facour actions that maximize the reward but _do not follow_ original objective.  
-_Example_: addition of workds to completion that increase the score for the metric that is being used for alignment.  
-
-#### Avoiding reward hacking
-
-Consider a _reference model_ that has weights frozen and is used to evaluate the output of the RL-updated model. Then, at each iterations compare the completions of the reference and aligned model using _KL Divergence_ (shift penalty).  
-`KL (Kullback-Leibler) Divergence` is a statistical measure of hau different two statistical distributions are. It allows to see how far the updated model has diverged from the reference (The entire LLM is used for computing it).  
-KL-Dirvergence is often used in RL, especially with PPO, where it helps guiding optimization process to ensuire that the updated policy does not deviate too much from the original one.  
-In PPO the ipdate is _iterative_ to ensure stability. Constraints, enforced by KL-Divergence are used to ensire that the iterations are small. 
-
-KL divergence is calculated _for each tocken_ in the vocabluary of the LLM. Using the _soft-max_ the probability is smaller than the whole vocabluary size. This is still compute expensive. After, computing, it is added as an extra term to the reward function. This penalizes the model if it shifts too far from the original one. 
-
-__NOTE__: two full copies of the LLM are required for this task.  
-
-__NOTE__: RLHF can be combined with PEFT; then _only_ the PEFT adapter weights are changed, not of the full LLM. 
-
-This allows us to re-use LLM for both tasks and to have just one LLM. 
-
-To evaluiate the final model, _Summarization Dataset_ can be used to assess the model perforamce using the number, e.g., _toxicity score_. 
-1. Create a _baseline_ toxicity score for an original LLM by evaluating its completions of the summaization dataset with the reward model that can assess toxic language
-2. Evaluate human allinged model on the same dataset. 
-3. Compare toxicity scores. 
-
-
-### Scaling human feedback
-
-Reward model requires a lot of huma-labelled data to be trained. (1000+ people an 10+ propmpts for each). This is expansive to gather. Human effort is a limited resource. 
-Solutions: _Scaling through model self-supervision_.  
-- `Consittutional AI` - Training a reward model using _set of rules_ in principles that guven the model behaviour. Train the model to self-critque and revise its responses to comply with these principles. 
-
-__NOTE__: it is also usefull It is usefull with scaling data and address other limitations of alligned LLM.  
-An alligned LLM may provide _harmful information_ as it tries to anaser the quations as best as it can. E.g., a user politely asked to learn to jailbreak and the model alligned for helpfulness does help. A model with _consitutional principles_ can balance competing interests and minimize the harm. 
-
-Training Consitutional AI model has two stages
-- Supervised model: prompt the model trying to generate harmfull responses: `Red Teaming`. 
-- Ask the model to critique its own harmfull responses; revise them to comply with the rules. 
-- Fine-tune the model provided Parir of prompts with harmfull and constitutional responses using RL. 
-This process sometimes called `Reinforcment learning with AI feedback (RLAIF)`
-
-At the end, the new, _Reward model_ is trained that can later be used to further align the original fine-tuned LLM to get Consitutional aligned LLM
+Reduce model size (reduces loading time/latency). Challenge: maintain performance.  
+Techniques: 
+- __Distillation__: use a larger _Teacher LLM_ to teach a smaller _Student LLM_.  The smaller one can be used for inference. It learns to _statistically mimic_ the hehaviour of the larger model. 
+    - Start with fine-tuned LLM as a teacher model
+    - Create a smaller student model
+    - Freeze the teacher model wieghts and create a training dataset with it
+    - Generate completions with student model. 
+    - Apply _distillation loss_ functions to the completions to train the student model. This is done using the tocken districution of the teacher model _soft-max layer_.
+    - As teacher model is already fine-tuned; it does not have much variation in its soft-max layer with respect to the ground trooth. Thus, _temperature_ is added, to increase the model _creativity_. 
+    This givens `Soft labels` (teacher model output) and `Soft predictions` (completions generated by student model) and `Distillation loss` between them; 
+    - In parallel, train the student LLM to generate predictions based on the _ground truth training data_ with temperatue 1. This gives `hard predictions` and `hard labels` and `Student loss` between them.
+    - Both, Distillation and Stident Losses are used to update weights of the student model via back-prop.
+    - The key benifit is the reduced model size and compleixty
+    - Dowside: model is not effective for generative decoder tasks; only for encoder-only models; e.g., BERT, that have _a lot of represntation reduncancy_. 
+- __Post-training quantization__ (PTQ) form a lower-precision representation of modelweights; this reduces model size and compute. It can be applied to just model weights, or weights and activation layers as well. The latter affects the performance of the model more strongly. 
+    - Requries extra _calibration step_ to statistically capture the dynamic range of the original parameter values. 
+- __Model prunning__: remove parts of the model that do not contribute much to the performance. 
+    - Generally, weights with values close to 0 can be removed. Some methods, however, require full re-training of the mode, while others can be done with PEFT/LoRA. 
+    - Post-training prunning 
+    - This reduces size and improves performance.
+    - It depends on the model state (how many 0 weights there are)
 
 
-### Lab 3 walkthrough
+### Generative AI Project Lifecycle Cheat Sheet
+
+1. The most time-consuming and expensive part is _model pre-training_. It is recommneded to start with pre-existing model. Than this part can be skipped. 
+2. Assess model performacne with _model engineering_. 
+3. Prompt-tuning and fine-tuning to improve model performance (full FT, PEFT); can be completed within a single day.
+4. RLHFl If reward model needs to be trained, it will take time, (gathering human fedback). So first, check if a reward model already exists. 
+5. Allignment; quick if model cahnges are not large. 
+
+
+### Using the LLM in applications
+
+Models have the following limitations: 
+- Pre-training limits the model knowladge of current events. Out-of-date knowladge. 
+- Complex mathematical tasks. Models do not carry out mathematical operations and do not give correct answer. 
+- Halucination: model gives answer when it does not know an answer. 
+
+__Solutions:__ 
+- eonnect model to external data-sources/tools (components).  
+
+Application:  
+User input -> `Orchestration Library` -> {LLM, tools, data, API, etc} -> output  
+
+Example of an orchestration library is _LangChain_.  
+
+#### Connecting LLM to external datasources
+
+Retrieval-augmented generation (RAG) - framework to build LLM-powered systems that make use of external datasources and applications.  
+This avoids model retraining on new data.   
+Access to new data is given _at inference_ time.  
+This improves model completion accuracy and relevance. 
+
+Consider one of the origianl RAG implementation by Lewis et al 2020 "Retrival-Augmented Generation for Knowladge-Intensive NLP Tasks".  
+
+Main componrnt: `Retriever` that consists of a 
+- Query encoder (tasks user's input prompt, encodes it into a form that can be used to get the data)
+- External information sources (vector store, SQL database, CSV file)
+Components are _trained together_ to learn to find the most relevant documents to the input quiry documents. 
+- Retiever returns a single (group of) docs; combines the new infor with the original user quiry. 
+- The retrieved info is combined with the original quiry and passed to LLM (making an expended prompt). 
+
+RAG allows to augment the model with 
+- External documents (private Wikis, expert systems)
+- Access to internet (wikipedia)
+- Web bages
+- Databases
+- Vector Store (usefull for LLMs, as those work with vector representation of language).  
+
+RAG implementations are complex: 
+- Data must fit inside the context window. Most text sources are way too long. External datasources are changed, each of which can be fit into the context window. 
+- Dat must be in the format that allows its _relevance_ to be assessed at inference time: __Embedding vectors__. Remember, LLM work with _vector representation of the text_ not with the text itself. This allows LLM to find _semantically related_ words via e.g., cosine similarity. RAG takes small chunks of data and processes them via LLM to create embedding vectors for each. New represenations of data are stoed in _vector stores_ which allow for fast search and retrieval.  
+`Vector database` is a particluar implementation of a vector store, where each vector also has a `key`. This allows for the RAG generated completion to include citations to the original document. 
+
+
+### Interacting with external applications
+Consider customer servace bot.  
+
+Connecting an LLM with external applications rquires an LLM to be able t otrigger actions, e.g., use python interpreter.   
+The heart is _prompt and completion_.  
+
+LLM,the application's reasoning engine, determins what actions to take.  
+Actions are generated, if LLM completions contain certain important information:
+- Plan actions ( set of instructions ); Understandable and corresponding to _allowed_ actions. 
+- Completion must be _formated_ in a way that broader application understands it. e.g., sentence sturction, script in python or SQL command. 
+- Collect information to _Validate an action_. E.g., ask user for extra information to validate the retrieved answer. For all tasks _prompt engineering_ is requried.
 
