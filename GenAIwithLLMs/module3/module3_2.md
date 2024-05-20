@@ -98,3 +98,109 @@ Actions are generated, if LLM completions contain certain important information:
 - Completion must be _formated_ in a way that broader application understands it. e.g., sentence sturction, script in python or SQL command. 
 - Collect information to _Validate an action_. E.g., ask user for extra information to validate the retrieved answer. For all tasks _prompt engineering_ is requried.
 
+
+### Helping LLMs reason and plan with chain-of-thought
+
+An LLM must _reason through the stesp_ an applications must take to achieve final result.  
+Multiple-step reasoning with math involved are very challenging for LLMs.  
+
+__NOTE__: such complex tasks also benefit from prompt engineering and on/few-shot inference.  
+
+One approach that was found usefull is to prompt a model to _think like a human_ i.e., break down the problem into small subproblems/steps.  
+There in a example solution given in a prompt, several steps are presented to guide the model through required thinking stages/resoning steps. The full set of steps is called `chain of through`.  
+
+`Chain of thought prompting` - asking a model to mimic this behaviour: set of reasoning steps. Instructions to teach a model to _reason through the task_. This is included in a few-shot reasoning step to form a _chain-of-thought prompt_.   
+This helps solving math, physics etc.  
+
+Limited math skills can still be a problem, if a math is complex.  
+
+
+### Program-aided language models (PAL)
+
+An LLM is not a calculator. It just tries to predict the next tocken to complete the prompt.  
+
+A model can interact with _external application_ that is better at math. 
+
+This generally refers to `programm-aided LLM` or PAL (see Luyu Gao abd collaborators). Pair an LLM with code interpreter. A model uses _chain-of-thought_ prompting to generate usable Python script, that in trun are passed into an interpreter to execute.  
+An LLM generates comletions where reasoning steps are accompanied by a computer code.  
+__NOTE__ model output must be specified. This is done via one or few-shot inference. 
+
+Inference with PAL requires an LLM to have 
+- a prompt with one or more example. Each example must include a question, and resoning steps in lines of python code (as comments). 
+- Append a new question/problem to the prompt.  
+- Pass it to LLM that generates a completion in a form of a python script
+- Pass script to a python interpreter.  
+- Append text with the answer into the initial prompt we started with. 
+- Pass  updated prompt into LLM
+- The final competion will contain the correct answer. 
+
+This is a powerfull technique for more complex math problems.  
+
+Automation of this problem involves an `orchistrator`, a technical component that manages the flow of information, and initiation of calls to external data sources or applications. It chooses what actions to take based on the output of an LLM. 
+- LLM is an application _reasoning_ engine (it creates a plan that orchestrator with interprete and execute)
+
+In reality, many external data sources and multiple dicision points, validation actions and calls to other applications must be managed. 
+
+
+### [ReAct](https://arxiv.org/abs/2210.03629): Combining reasoning and action 
+
+`ReAct` is a _prompting strategy_ that combines chain-of-thought resoning with action planning. Based on ap paper that proposes a method to aswer question from _Hot Pot QA_ - multi-step question-answering benchmark. It requries reasoning from multiple Wiki passages.  
+It uses _structured examples_ to show LLM how to reason through a prblem and _decide_ what actions to take to solve it.  
+In that case, allowed actions were:
+- Search (look for a Wiki entry about a particular topic)
+- lookup (search for a string on a wiki page)
+- finish (model has found an aswer)
+
+The prompt has the following structure:
+- Question
+- Thought
+- Action
+- Observation
+
+The cycle is repeated untill the final answer is found.  
+
+Note: an LLM can only chose a limited number of actions that is specified in the example prompt text. 
+
+#### Summary:
+
+1. Start with the ReAct example prompt (depending on the LLM used, multiple examples might be needed).
+2. Pre-append the instructions
+3. Append the question to be answered at the end. 
+
+The full prompt can then be used for inference. 
+
+#### LangChain
+
+A framework to develop applications powered by LLMs.  
+It provides one with modular pieces that contain components needed to work woth LLms:
+- prompt examples
+- memory (to store interactions with LLM)
+- prebuilt tools:
+    - calls to dataset and APIs
+combining all of it results in a Chain. 
+
+There are several pre-made Chains optimized for different use-cases. 
+
+
+If an application might need multiple passess to fullfill the user query, a different approach is needed, as the user moves through the workflow. Here one can use `Agent` construct from LangChain, to read the input from the user and determine which tool or tools to use to complete the task. There are Agents for PAL and ReAct.  
+Agents can also be chained.  
+This is under active development.  
+
+The ability of the model to reason depends on the model Size. 
+
+
+### LLM application architectures
+
+Building blocks to create an LLM powered applications:
+- Infrastructure layer (provides the compute, storage); Serving LLM; storing application components. Either on-premises or cloud. 
+- LLM layer (foundation models or models adapted for specific tasks); deployed on a specific infrastructure (based on the task - real-time or near real-time inference); external sources for RAG; Completions are returned to the user/application; mechanisms to capture and store outputs. Stored user completions may be used to _augment_ the fixed window size of the LLM. 
+- Additional tools and frameworkds for LLMs (PAL, ReAct, LangChain Model Hubs); Model Humbs allow to centrally manage model
+- User interface through which an application can be consimed (RestAPI or a webpage); Security components needed. 
+
+This is an application stack. 
+
+
+### Optional video: AWS Sagemaker JumpStart
+
+It is a _Model Hub_ that allows to build and deply foundation models and integrate them with an application. Allows also for fine-tuning and deplpoyments. 
+Note. It requies GPUs that are served _on-demand_ and subjected the samy type of pricing. Cost monitorying best practicies are needed to optimize cost. 
