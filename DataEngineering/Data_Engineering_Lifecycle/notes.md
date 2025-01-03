@@ -104,7 +104,161 @@ This is a final stage of the data engineering life-cycle.
 This is where the data has value for use cases.  
 
 __Analytics__: 
+> Analytics is the process of identifying key insights and patterns within data.
+
+- __Business Intellegence__ - Exploring _historical data_ to extract business insights (in the form of reports and dashboards)
+    - Campaign engagement
+    - Regional Sales
+    - Custormer experiece metrics
+- __Operational Analytics__ - Monitoring _real time data_ for immediate actions
+    - Real-time performance metrics for a webpage
+    - Ingesting, transforming and serving event data
+- __Embedded Analytics__ - External or customer-facing analytics
+    - Analytics dashboards and data that is provided to a consumer (e.g., mobile app dashboards)
+- __Machine Learning__ - Separate due to niche needs
+    - Model training (feature stores)
+    - Real-time Inference 
+    - Track data history and lienage
+- __Reverse ETL__ - use transformed data, analytics and ML output and feed it back to the source systems
 
 
 
+# The Undercurrents of the Data Engineering Lifecycle -- Security
+
+> Principle of lease privilige -- giving users or applications access to only the essential data and resources needed to do the job and only for a duration of this job
+
+Examples:
+- Avoid working from _root shell_ or using _super user_ priviliges if they are not needed  
+- Ensiring _data sensitivity_ e.g., sensitive data, such as personal, medical, finantial data is anonymized and hidden unless required.  
+- Avoid using sensitive data. 
+- __Sequirity in the Cloud__
+    - Identity and Acess Managment (IAM)
+    - Encryption Methods
+    - Networking Protocols
+- Defensive mindset when access to sensitive data is requested. 
+- Databases should not be exposed to general public. Sequirity best practicies should be used. 
+
+
+# Data Managment
+
+See Data Management Association International (DAMA) -- Book of Knowledge (DMBOK)
+
+> __Data Managment__ - development and supervision of plans, programs and practicies that deliver, control, predict and enhance the value of data and information assets throughout thir life cycles. 
+
+__Data Knowledge Areas for Data Managment__ (11 ares)
+- __Data Guvernance__ (in the core)
+- Data Modeling 
+- Data Storage and operations
+- Data integration and interoperability
+- Data security
+- Reference and master data 
+- Metadata
+- Data warehousing and Business
+- Document & content Managment
+- Data quality
+- Data achitecture
+
+See also _Data Governance: The definitive Guide_ 
+
+> __Data Guvernance__, first and foremost, a data managment function to ensure the quality, integrity, security, and usability of the data collected by an organization
+
+Consider Data Quality. 
+- _High Quality Data_ - expected by stakeholders (schemas etc)
+    - Accurate
+    - Complete
+    - Discoverable
+    - Available in the timely manner
+- _Low Quality Data_
+    - Inaccurate
+    - Incomplete
+    - Missing Data
+
+
+# Data Architecture
+
+Road map or a blueprint for the data system. 
+
+See Book: _Fundamentals of Data Engineering_
+
+> __Data Architecture__ is the design of systems to support the evolving data needs of an enterprise, achieved by flexible and reversible decisions reached through a careful evaluation of trade-offs
+
+Note:
+- Evolving data needs. -- Data achitecture is an evolving effort
+- Flexible and reversable deicsions -- architecture should be able to change or brought back
+- Evaulation of trade-offs (scalability, performance, etc.)
+
+Note, reversability benifits from cloud more than ever, as hardware on premises cannot be returned if not needed.
+
+Principles of Good Data Architecture 
+- Choose common components wisely (cross-team, cross-project compoennts)
+- Plan for failure. 
+- Architect for scalability (response for changing demand)
+- Architecture is leadership
+- Always be architecting
+- Build lossely coupled systems (build from individual components)
+- Make reversable decisions (if needs of organization changes)
+- Prioritize security
+- Embrace FinOps (finance, dataops etc -> cloud)
+
+
+# DataOps
+
+Improvs the development and quality of data products (similar to DevOps)  
+It is a _set of cultural habits and practicies_. 
+- Prioritizing communication and collaboration
+- Continously learning from successes and failers 
+- Rapid iteration
+
+These techniques are borrowed from _Agile methodology_ (delivering work in iterative, incremental steps)
+
+_Pillars of DataOps_
+- __Automation__
+    - DevOps (applied to software build) Continous Integration and Continous Delivery (CI/CD)
+        - Automation of cycle: Build -> Test -> Integrate -> Deploy 
+        - Faster review and deployment; less errors
+    - DataOps (applies to data processing)
+        - Automated change managment (code, configuration, environment)
+        - Data procession and pipelining
+        - _Pure Scheduling approach_ (low level automation for each task in the pipeline)
+        - _Orchestration framework_ framework determins automatically which task depen on which and based on the frequncy launches them
+        - Automatic verification
+- Observability and Monitoring
+    - Monitor systems
+- Incident Response
+    - Rapid identify root causes of failuers 
+    - Identify technology and tools
+
+
+# Orchestration
+
+Initially a data pipeline can be set up as a manual project. For POC or simple project.  
+Manual execution is common in prototyping.  
+Once tasks are determning, _scheduling_ can be used.  
+Pure scheduling however can cause cascade failuers if one task does not finish before the next one.  
+
+Orchestration frameworks
+- Apache airflow
+    - Automate pipeline with complex dependencies
+    - Monitor pipeline
+
+Scheduling
+- Time-based
+- Event-based
+
+Provides monitoring. 
+
+Commonly, pipelines need to be set as __Directed Acyclic Graphs__ (DAG). 
+
+Source systems -> Transfoormation step -> Storage -> Split -> Branch 1: transformation -> analytics Use Case; -> Branch 2: transformation for MLOps
+
+DAGs are deployed within framework of choice.  
+
+
+# Software Engineering
+
+> __Software Engineeing__: design, development, deployment and maintenence of software applications
+
+SQL, python, Bash  
+
+Readable, translatablem production-ready code
 
