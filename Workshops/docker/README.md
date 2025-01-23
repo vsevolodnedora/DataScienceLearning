@@ -9,6 +9,11 @@ We can follow this workshop fully through Gitpod's VSCode, **no need to install 
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/KISZ-BB/kisz-mlops-docker/)
 
+## Open this Repository on Codeanywhere
+We can follow this workshop fully through Codeanywhere **no need to install software locally**, but we also provide the instructions for a local installation as an option.
+
+[![Open in Codeanywhere](https://codeanywhere.com/img/open-in-codeanywhere-btn.svg)](https://app.codeanywhere.com/#https://github.com/KISZ-BB/kisz-mlops-docker)
+
 ## Local Installation Guide
 This guide provides instructions for installing and setting up all the tools and environments you need to participate in the workshop.
 Familiarity with opening and using a terminal is required. Here's how you can start a terminal:
