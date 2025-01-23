@@ -262,3 +262,95 @@ SQL, python, Bash
 
 Readable, translatablem production-ready code
 
+
+---
+
+# Practical Examples on AWS
+
+
+---
+
+# The Data Engineering Lifecycle on AWS
+
+Source systems on AWS
+- __Databases (most common)__
+    - __Amazon Relational Database Service (RDS)__ 
+        - Provisions database instances with the relational database engine of your choice
+        - Simplifies the operational overhead involed with provisioning and hosting a relational database
+    - __Amazon DynamoDB__
+        - A serverless NoSQL database operational
+        - Create stand-alone tables that are virtually unlimited in their total size
+        - Has a flexible schema
+        - Best suited for applications that require low-latency access to data
+- __Streaming Sources__
+    - __Amazon Kinesis Data Streams__
+        - Set up as a source system streaming real-time user activities from a sales platform log
+    - __Amazon Simple Queue Service__
+        - Handle massages when building your own data pipelines outside of these courses
+    - __Amazon Managed Streaming for Apache Kafka (MSK)__ 
+        - Makes it easier to run Kafka workloads on AWS because the underlying infrastructure is managed for you
+
+- __Injestion__
+    - __AWS Database migration Service (DMS)__
+        - Can migrate and replicate dta from a source to a target in an automatic ways
+    - __AWS Glue__ 
+        - Offers features that support data integration processes
+    - __Amazon Kinesis Data Streams__ 
+    - __Amazon Data Firehose__
+    
+- __Storage__
+    - __Amazon Redshift__ (large standard storage)
+    - __Amazon Simple Storage (S3)__
+    - __Lakehouse Arrangments__ 
+        - Combinations of various solutions that allow access structured data in the warehouse and unstractured data in an object data lake
+
+- __Transformation__
+    - __AWS Glue__
+    - __Apache Spark__
+    - __dbt__
+
+- __Serving__
+    - Analytics
+        - __Amazon Athena__ (for quiring structured and unstractured data)
+        - __Amazon Redshift__ (for quiring structured and unstractured data)
+        - __Amazon QuickSight__ (dashboarding tools)
+        - __Apache Superset__ (dashboarding tools)
+        - __Metabase__  (dashboarding tools)
+    - AI or Machine Learning
+        - Serve batch data for training and vector databases
+
+# Undercurrents on AWS 
+
+> __Identity and Access Managment (IAM)__ setup roles and permissions for various services
+
+- Sequirity
+
+    - __IAM roles__
+        - Give users/applications access to _temporary_ cridentials
+        - Provide appropriate AWS API permissions to various tools or data storage Areas
+    - Amazon Virtual Private Cloud (VPC)
+    - Security Groups
+    - Instance-level firewalls
+- __Data Managment__ - Disconver, create and manage metadata for data stored in Amazon S3 or other storage and database systems
+    - AWS Glue
+    - AWS Glue Crawler
+    - AWS Glue Data Catalog
+    - __AWS Lake Formation__ - Centrally manage and scale fine-grained data access permissions
+
+- __DataOps__
+    - __Amazon cloudWatch__ - collects metrics and provides monitoring features for cloud resources, applications and on-premises resources
+    - __Amazon Simple Notification Service (SNS)__ - sets up notifications between applications or via text/email that are triggered by events with the system
+    - __Amazon CloudWatch Logs__ - store and analyze operational logs
+    - __MONTECARLO__ (open source)
+    - __BIGEYE__ (oepn source)
+
+- __Orchestration__
+    - __Apache Airflow__
+
+- __Architecture__
+    - __AWS Well-Architectured__ - Set of principles and practicies tailored for: Operational Efficiency, Sequirity, Performance Efficiency, Cost Optimization, Sustainability and Reliability. 
+
+- __Software Engineering__
+    - __AWS Cloud 9__ (IDE) hosted on Amazon Elastic Compute Cloud (EC2) i.e., it is an VM with an IDE installed on it
+    - __Amazon Code Deploy__ that allows to automate code deployment
+    - Version Control (GIT)
